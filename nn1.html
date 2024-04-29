@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic XML to HTML Conversion</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:100" rel="stylesheet">
+    <!-- <link href="https://fonts.cdnfonts.com/css/paula-selina" rel="stylesheet"> -->
+    <style>
+        /* CSS to mimic PDF-like appearance and A4 size */
+        body {
+            /* font-family: Arial, sans-serif; */
+            font-family: 'Times New Roman', serif;
+            font-weight: 100;
+            margin: 0;
+            padding: 20px;
+            /* Add padding to simulate A4 margins */
+            background-color: #ffffff;
+        }
+
+        .page {
+            width: 210mm;
+            /* A4 width */
+            height: auto;
+            /* A4 height */
+            margin: 0 auto;
+            /* Center the content */
+            padding: 20mm;
+            /* Add padding to simulate A4 margins */
+            box-sizing: border-box;
+            /* Include padding in total width/height */
+            border: 1px solid #ccc;
+            /* Optional border for visual reference */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Option to choose file -->
+    <div>
+        <input type="file" id="fileInput">
+        <label for="fileInput">Choose XML File</label>
+    </div>
+    <br>
+    <button id="convertBtn">Convert XML to HTML</button>
+    <button id="downloadBtn" style="display: none;">Download HTML</button>
+
+    <!-- HTML output -->
+    <div id="htmlOutput" class="page"></div>
+
+    <script>
+        document.getElementById('convertBtn').addEventListener('click', function () {
+            const fileInput = document.getElementById('fileInput');
+
+            if (fileInput.files.length > 0) {
+                // If file is chosen, read the file content
+                const file = fileInput.files[0];
+                readFileContent(file);
+            } else {
+                alert('Please choose a file.');
+            }
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', function () {
+            downloadHTML();
+        });
+
+        function readFileContent(file) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const xmlString = event.target.result;
+                convertXMLtoHTML(xmlString);
+            };
+            reader.readAsText(file);
+        }
+
+
+
+        function convertXMLtoHTML(xmlString) {
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(xmlString, "text/xml");
+
+            // Extracting English and French full contents
+            var enFull = "";
+            var frFull = "";
+            var titleWrapElements = xmlDoc.getElementsByTagName("title-wrap");
+            for (var i = 0; i < titleWrapElements.length; i++) {
+                var langAttribute = titleWrapElements[i].getAttribute("xml:lang");
+                if (langAttribute === "en") {
+                    enFull = titleWrapElements[i].querySelector("full").textContent;
+                } else if (langAttribute === "fr") {
+                    frFull = titleWrapElements[i].querySelector("full").textContent;
+                }
+            }
+
+            var originator = xmlDoc.querySelector("originator").textContent;
+            var docNumber = xmlDoc.querySelector("doc-number").textContent;
+            var docRef = xmlDoc.querySelector("doc-ref").textContent;
+            var copyyr = xmlDoc.querySelector("copyright-year").textContent;
+
+            var htmlOutput = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Converted HTML</title>
+            <style>
+                @media print {
+                    .new-page {
+                        page-break-before: always;
+                    }
+                }
+                
+                .green-paras{
+                    background-color: green;
+
+                }
+                .header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    text-align: right;
+                }
+                .full-content {
+                    text-align: left;
+                    margin-right: 0px;
+                    padding-right: 0px;
+                    font-size: 15px;
+                    margin-top: 80px;
+                    margin-bottom: 400px;
+                }
+                p {
+                    text-align: justify;
+                }
+                .left-align {
+                    text-align: left;
+                }
+                .italic {
+                    font-style: italic;
+                }
+                .pagebrek{
+                    padding-left: 200px;
+                    padding-right: 0px;
+                }
+                hr{
+                    border-width: 1px;
+                    margin-bottom: -6px;
+                    border-top: 2px solid black;
+                }
+                .rowdiv{
+                    display: grid;
+                    column-gap: 0px;
+                    grid-template-columns: auto auto auto;
+                    padding: 10px;
+                    margin-top: 20px;
+                }
+                .coldiv1{
+                    margin-top: 10px;
+                }
+                .coldiv2{
+                    padding: 0px;
+                    font-size: 13px;
+                    margin-right: -90px;
+                    text-align: right;
+                }
+                .pagebreak-div{
+                    
+                     page-break-before: always;
+            height:20px;
+            width: 123.8%;
+           
+            background-color:gray;   
+            break-before: always;
+           
+             position: relative; 
+              left: -76px;
+            
+                }
+               
+            </style>
+        </head>
+        <body>
+            <div class="pagebrek" >
+            <div class="header">
+                <div class="left-align">
+                    <h2>INTERNATIONAL<br>
+                    STANDARD</h2>
+                </div>
+                <div>
+                    <h3>${originator}<br>
+                        ${docNumber}</h3>
+                        </div>
+                        </div>
+                        <br><br><br>
+                        <div class="full-content">
+                        <hr><hr><hr>
+                <h2><b>${enFull}</b></h2><span class="italic">${frFull}</span>
+            </div>
+                <hr><hr><hr> 
+                <div class="rowdiv">
+                    <div class="coldiv1">
+                        <img src="https://old.sysfort.com/ANSI/ISO.png" height=80% width=35% />
+                        <img src="https://old.sysfort.com/ANSI/IEF.png" height=80% width=35% />
+                    </div>
+                    <div class="coldiv2">
+                    <span>Reference number</span><br>
+                    <span>${docRef}</span><br><br><br>
+                    <span>&#169;&nbsp;${originator}&nbsp;${copyyr}</span><br>
+                    </div>
+                </div>
+            
+        </div>
+        <br><br><br><br><br><br>
+    `;
+
+            var contentFitsOnFirstPage = true;
+            var frFullElement = xmlDoc.querySelector("title-wrap[xml\\:lang='fr'] full");
+            if (frFullElement) {
+                var contentHeight = window.innerHeight;
+                var frFullTextHeight = getComputedStyle(frFullElement).height;
+                if (parseFloat(frFullTextHeight) > contentHeight) {
+                    contentFitsOnFirstPage = false;
+                }
+            }
+
+            if (!contentFitsOnFirstPage) {
+                // Insert a new page after displaying French full content
+                htmlOutput += `
+            <div class="new-page"></div>
+        `;
+            }
+            htmlOutput += `
+            <div class="pagebreak-div"></div>
+            <br><br><br>
+        `;
+            // Initialize a4PageHeight and contentHeight
+            var a4PageHeight = 1100; // 1100px
+            var contentHeight = 0;
+            var bodyElements = xmlDoc.getElementsByTagName("sec");
+
+
+
+
+            for (var i = 0; i < bodyElements.length; i++) {
+                var bodyElement = bodyElements[i];
+                console.log(bodyElements[i]);
+
+                var secTitleElement = bodyElements[i].getElementsByTagName("title")[0];
+                var secTitle = secTitleElement ? secTitleElement.textContent : null; // Trim any leading or trailing whitespace
+
+                var labelElement = bodyElements[i].getElementsByTagName("label")[0];
+                var lable = labelElement ? labelElement.textContent : null; // Trim any leading or trailing whitespace
+
+                // Extracting content from sec element
+                var secContent = "";
+                var secParagraphs = bodyElement.getElementsByTagName("p");
+                for (var j = 0; j < secParagraphs.length; j++) {
+                    var paragraph = secParagraphs[j];
+                    // Handling ext-link tags within the p element
+
+                    var paragraphText = paragraph.textContent;
+                    var numRefRegex = /\b\d+\.\d+\b/g;
+                    var matches = paragraphText.match(numRefRegex);
+
+                    if (matches) {
+                        matches.forEach(function (match) {
+                            var anchorId = match.replace('.', '_');
+                            var anchorTag = `<a href="#${anchorId}">${match}</a>`;
+                            paragraphText = paragraphText.replace(match, anchorTag);
+                        });
+                        paragraph.innerHTML = paragraphText;
+                    }
+
+                    var extLinks = paragraph.getElementsByTagName("ext-link");
+                    if (extLinks.length > 0) {
+                        // If there are ext-link elements, iterate over them
+                        for (var k = 0; k < extLinks.length; k++) {
+                            var extLink = extLinks[k];
+                            var extLinkHref = extLink.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+                            var extLinkText = extLink.textContent;
+                            // Create a new anchor element
+                            var anchor = document.createElement("a");
+                            anchor.setAttribute("href", extLinkHref);
+                            anchor.setAttribute("target", "_blank");
+                            anchor.textContent = extLinkText;
+                            // Replace the ext-link element with the anchor element
+                            paragraph.replaceChild(anchor, extLink);
+                        }
+                    }
+                    var uriElements = paragraph.getElementsByTagName("uri");
+                    if (uriElements.length > 0) {
+                        for (var k = 0; k < uriElements.length; k++) {
+                            var uri = uriElements[k];
+                            var uriText = uri.textContent;
+                            var anchor = document.createElement("a");
+                            anchor.setAttribute("href", uriText);
+                            anchor.textContent = uriText;
+                            paragraph.replaceChild(anchor, uri);
+
+                        }
+                    }
+
+
+                    secContent += `<p> + ${paragraph.innerHTML} + </p>`;
+
+                }
+
+                // Handling term-sec elements
+                var termSecElements = bodyElements[i].getElementsByTagName("term-sec");
+                if (termSecElements.length > 0) {
+                    for (var k = 0; k < termSecElements.length; k++) {
+                        var labelElement = termSecElements[k].getElementsByTagName("label")[0];
+                        var termElement = termSecElements[k].getElementsByTagName("tbx:term")[0];
+                        var definitionElement = termSecElements[k].getElementsByTagName("tbx:definition")[0];
+                        var noteElements = termSecElements[k].getElementsByTagName("tbx:note");
+                        var sourceElements = termSecElements[k].getElementsByTagName("tbx:source");
+                        var sourceElements = termSecElements[k].getElementsByTagName("tbx:source");
+
+
+                        if (labelElement && termElement) {
+                            var label = labelElement.textContent;
+                            var term = termElement.textContent;
+                            var definition = definitionElement.textContent;
+
+                            var numRefRegex = /\b\d+\.\d+\b/g;
+                            var matches = definition.match(numRefRegex);
+
+                            if (matches) {
+                                matches.forEach(function (match) {
+                                    var anchorId = match.replace('.', '_');
+                                    var anchorTag = `<a href="#${anchorId}">${match}</a>`;
+                                    definition = definition.replace(match, anchorTag);
+                                });
+                                definition.innerHTML = definition;
+                            }
+
+
+
+                            // var definition = termSecElements[k].textContent.replace(label, "").replace(term, "");
+                            var anchorId = label.replace('.', '_');
+                            secContent += `<h4 id="${anchorId}"><b>${label}</b><br>${term}</h4>`;
+                            // secContent += `<h4><b>${label}</b><br> ${term}</h4>`;
+
+
+
+                            secContent += `<p>${definition}</p>`;
+                            secContent += '<p></p>';
+
+                            if (noteElements.length > 0) {
+
+                                for (var n = 0; n < noteElements.length; n++) {
+                                    var note = noteElements[n].textContent.trim();
+                                    var numRefRegex = /\b\d+\.\d+\b/g;
+                                    var matches = note.match(numRefRegex);
+
+                                    if (matches) {
+                                        matches.forEach(function (match) {
+                                            var anchorId = match.replace('.', '_');
+                                            var anchorTag = `<a href="#${anchorId}">${match}</a>`;
+                                            note = note.replace(match, anchorTag);
+                                        });
+                                        note.innerHTML = note;
+                                    }
+                                    secContent += `<p>Note ${n + 1} to entry: ${note}</p>`;
+
+                                }
+
+                            }
+                            if (sourceElements.length > 0) {
+                                for (var s = 0; s < sourceElements.length; s++) {
+                                    var source = sourceElements[s].textContent.trim();
+                                    secContent += `<p>[SOURCE: ${source}]</p>`;
+                                }
+                            }
+                            var listItemElements = termSecElements[k].getElementsByTagName("list-item");
+                            for (var l = 0; l < listItemElements.length; l++) {
+                                var listItem = listItemElements[l];
+
+                                // Extracting <label> and <p> elements from list-item
+                                var listItemLabelElement = listItem.getElementsByTagName("label")[0];
+                                var listItemPElement = listItem.getElementsByTagName("p")[0];
+
+                                var listItemLabelText = listItemLabelElement ? listItemLabelElement.textContent.trim() : null;
+                                var listItemPText = listItemPElement ? listItemPElement.textContent.trim() : null;
+
+                                // Output or store the extracted content as needed
+                                if (listItemLabelText !== null && listItemPText !== null) {
+                                    console.log(`${listItemLabelText} ${listItemPText}`);
+                                    secContent += `${listItemLabelText} ${listItemPText}`;
+                                    secContent += "<br>";
+                                }
+                            }
+                        }
+
+
+                    }
+                }
+
+
+
+
+
+                // Construct HTML with title if it exists
+                if (secTitle !== null) {
+                    htmlOutput += "<h3>" + lable + "  " + secTitle + "</h3>";
+                }
+
+                htmlOutput += secContent;
+
+
+
+                // Construct HTML with title if it exists
+
+
+                var secContent = ""; // Reset secContent for each section
+
+
+            }
+
+
+
+
+
+
+
+
+            htmlOutput += "</body></html>";
+
+            document.getElementById("htmlOutput").innerHTML = htmlOutput;
+            document.getElementById("downloadBtn").style.display = "block";
+
+            const event = new Event('ConversionCompleted');
+            document.dispatchEvent(event);
+        }
+
+
+
+
+
+
+        function downloadHTML() {
+            var htmlContent = document.getElementById("htmlOutput").innerHTML;
+
+            // Generate complete HTML with A4 size and same content
+            var htmlDoc = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Converted HTML</title>
+        <style>
+        /* CSS to mimic PDF-like appearance and A4 size */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20mm; /* A4 margins */
+            background-color: #ffffff;
+        }
+
+        .page {
+            width: 210mm; /* A4 width */
+            height: auto; /* Dynamic height */
+            margin: 0 auto; /* Center the content */
+            padding: 20mm; /* Add padding to simulate A4 margins */
+            box-sizing: border-box; /* Include padding in total width/height */
+            border: 1px solid #ccc; /* Optional border for visual reference */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+        </style>
+        </head>
+        <body>
+        <div class="page">
+        ${htmlContent}
+        </div>
+        </body>
+        </html>
+    `;
+
+            // Create a Blob
+            var blob = new Blob([htmlDoc], { type: "text/html" });
+
+            // Create a temporary link element
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "converted_output.html";
+
+            // Trigger the download
+            document.body.appendChild(link);
+            link.click();
+
+            // Cleanup
+            document.body.removeChild(link);
+        }
+
+
+        
+
+        // Dispatch custom event to signal completion of the first script
+        document.addEventListener("DOMContentLoaded", function () {
+            const event = new Event('FirstScriptCompleted');
+            document.dispatchEvent(event);
+        });
+    </script>
+
+
+<!-- The second script tag will execute only when the first script tag is done. This is  -->
+    <script>
+
+
+        document.addEventListener("FirstScriptCompleted", function() {
+            // Listen for completion of the first script before executing the second script
+            console.log("Second script tag");
+
+            // Listen for the conversion completion event
+            document.addEventListener("ConversionCompleted", function() {
+                // Your code for the second script block goes here...
+
+                // Initialize variables
+                let contentHeight = 0;
+                const A4Height = 930; // Height of A4 page in pixels
+                const pagebreakDiv = document.querySelector(".pagebreak-div");
+                const bodyElements = document.querySelectorAll("#htmlOutput > *");
+                console.log(bodyElements);
+                // Loop through each element inside the body
+                bodyElements.forEach(element => {
+                    // Calculate the height of the element and add it to the content height
+                    contentHeight += element.offsetHeight;
+
+                    // Check if content height exceeds or equals A4 height
+                    if (contentHeight >= A4Height) {
+                        // Insert a page break before the current element
+                        const pagebreak = document.createElement("div");
+                        pagebreak.className = "pagebreak-div";
+                        element.parentNode.insertBefore(pagebreak, element);
+
+                        // Reset content height for the next page
+                        contentHeight = 0;
+                    }
+                });
+
+                // Check if content height exceeds or equals A4 height after the loop ends
+                if (contentHeight >= A4Height) {
+                    // Insert a page break at the end of the document
+                    const pagebreak = document.createElement("div");
+                    pagebreak.className = "pagebreak-div";
+                    document.body.appendChild(pagebreak);
+                    contentHeight=0;
+                }
+
+                // Remove the initial page break div used for positioning
+                pagebreakDiv.remove();
+        
+    });
+});
+
+
+    </script>
+</body>
+
+</html>
